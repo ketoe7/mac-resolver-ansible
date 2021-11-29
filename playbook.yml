@@ -1,0 +1,25 @@
+---
+- name: Resolve MAC address using macaddress.io
+  hosts: targets
+  vars:
+    api_url: https://api.macaddress.io/v1
+
+  tasks:
+    - name: Check if required variables are set by user
+      fail: 
+        msg: Variables mac=XX:XX:XX:XX:XX:XX and api_key=<your_api_key> are required. Please provide it with -e flag.
+      when: mac is not defined or mac == '' or api_key is not defined or api_key == ''
+
+    - name: Send request to {{ api_url }}
+      uri:
+        method: GET
+        url: "{{ api_url }}?output=vendor&search={{ mac }}"
+        headers:
+          X-Authentication-Token: "{{ api_key }}"
+        return_content: yes
+      register: get_response
+      ignore_errors: yes
+
+    - name: Display result
+      debug:
+        var: get_response.content
